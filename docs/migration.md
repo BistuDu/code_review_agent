@@ -1,6 +1,6 @@
 # 核心语义迁移映射
 
-原版仅作静态参考，评审和评分实现均在本项目，Claude 使用已安装的原生 CLI。资源逐文件摘要见 `resources/migration_manifest.json`；Apache-2.0 许可证见 `THIRD_PARTY_LICENSES/`。
+原版仅作静态参考，评审和评分实现均在本项目，Claude 使用已安装的原生 CLI。资源逐文件摘要见 `resources/migration_manifest.json`。
 
 | 原版能力 | 本项目位置 | 保留或适配 |
 | --- | --- | --- |

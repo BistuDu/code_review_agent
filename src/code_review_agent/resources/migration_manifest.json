@@ -332,11 +332,6 @@
       "sha256": "5563e606c94ba1ad80d652d52d5cf289959fc3fcbf08aef40d10cbd9a0592023"
     },
     {
-      "source": "LICENSE",
-      "target": "THIRD_PARTY_LICENSES/open-code-review-LICENSE",
-      "sha256": "1945665fdb6968a66ea29438ddee0aee23035365c862e5c4a75b62b303340acf"
-    },
-    {
       "source": "internal/config/allowlist/supported_file_types.json",
       "target": "src/code_review_agent/resources/filters/supported_file_types.json",
       "sha256": "18d965814088e86bc3e7781081c16c27f3904eb8cae17abdd856eb9fcc09f536"
