@@ -19,7 +19,7 @@ class ModelSettings:
     model: str = ""
     api_key: str = ""
     max_output_tokens: int = 16384
-    context_tokens: int = 58888
+    context_tokens: int = 300000
     temperature: float = 0.0
     timeout_seconds: float = 180.0
     retries: int = 2
