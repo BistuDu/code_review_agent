@@ -1,0 +1,18 @@
+{
+  "reviewer": {"base_url": "", "model": "", "api_key": ""},
+  "reflection": {"base_url": "", "model": "", "api_key": ""},
+  "judge": {"base_url": "", "model": "", "api_key": "", "temperature": 0.0},
+  "protocol": "chat_completions",
+  "language": "zh",
+  "effort": "medium",
+  "max_concurrency": 8,
+  "max_tool_iterations": 100,
+  "batch_strategy": "by-language",
+  "batch_size": 50,
+  "scan_plan": true,
+  "scan_dedup": true,
+  "scan_summary": true,
+  "dedup_min_comments": 4,
+  "include": [],
+  "exclude": []
+}

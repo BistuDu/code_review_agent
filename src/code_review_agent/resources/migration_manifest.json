@@ -1,0 +1,351 @@
+{
+  "reference": "alibaba/open-code-review",
+  "resources": [
+    {
+      "source": "internal/config/rules/rule_docs/arkts.md",
+      "target": "src/code_review_agent/resources/rules/arkts.md",
+      "sha256": "8c146c5713b3ba32166930d8ba1c96e649fef593fd465dc73e6c7fb979bb8682"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/astro.md",
+      "target": "src/code_review_agent/resources/rules/astro.md",
+      "sha256": "9ecfe0ab7035f413eb8172dd437de6502d781e229fac69857c9cc0ea5d17be4e"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/bicep.md",
+      "target": "src/code_review_agent/resources/rules/bicep.md",
+      "sha256": "ec9907d0e062f8bc71e84beafa3055d894cf8a8748082e47a52cc04108763681"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/build_gradle.md",
+      "target": "src/code_review_agent/resources/rules/build_gradle.md",
+      "sha256": "f511a3c5df99e0022d33edf28d00f43d4e7e0d7f7496ff1035b4f4a7ea4705a4"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/c.md",
+      "target": "src/code_review_agent/resources/rules/c.md",
+      "sha256": "bc24216e887e782d18b41448ba70ec149db60fca69ce270e69fe0285a4dd1996"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/capnp.md",
+      "target": "src/code_review_agent/resources/rules/capnp.md",
+      "sha256": "31bd6e7319d85e5f3b15212cb41825b631e0806d9e8c0790a5183c361393b386"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/cargo_toml.md",
+      "target": "src/code_review_agent/resources/rules/cargo_toml.md",
+      "sha256": "0c0fd9e692e217d850ea66691e73775bcf045b1faf06d3814a43242d8dd8a593"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/composer_json.md",
+      "target": "src/code_review_agent/resources/rules/composer_json.md",
+      "sha256": "839a18f91961cbb5eff20300028afae5b7bed185eaccfc6cef8e758b67832476"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/cpp.md",
+      "target": "src/code_review_agent/resources/rules/cpp.md",
+      "sha256": "06df79df2454cb2003be6e52e4f6d58f9ce5ce51bc7e31e0be2e417af315e130"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/default.md",
+      "target": "src/code_review_agent/resources/rules/default.md",
+      "sha256": "ababeb873e9c249a701c35afa115f8ee8e32b856d0fcebf6232a7d2bef03abd0"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/elm.md",
+      "target": "src/code_review_agent/resources/rules/elm.md",
+      "sha256": "a1d394cb495cfc2cc8f9c682945e3cc744091e9ebc58e0a692a2287a22d1e580"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/freemarker.md",
+      "target": "src/code_review_agent/resources/rules/freemarker.md",
+      "sha256": "3b1eb68367f4d955d73e13dd139e71408a01884276cb4f7e151095c2a2c5d4c7"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/github_config.md",
+      "target": "src/code_review_agent/resources/rules/github_config.md",
+      "sha256": "64af359e7fcb8a0bdba88738e5429836d5efddc89851b042c9114985e7d22b95"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/github_workflows.md",
+      "target": "src/code_review_agent/resources/rules/github_workflows.md",
+      "sha256": "801de96a1a8de9d2a4f18f60b5c29c17d58ca49de201b9f66b5c16c1e9d83866"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/go.md",
+      "target": "src/code_review_agent/resources/rules/go.md",
+      "sha256": "b6958ae9894a8bbe6d09d9241956ca24673848472d0bdf0a968b2ee9ab308fa5"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/graphql.md",
+      "target": "src/code_review_agent/resources/rules/graphql.md",
+      "sha256": "d366bf4cf234c562c2522bed7ab979fafcccd5498f2f1f004a2638d58fc4ad24"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/handlebars_mustache.md",
+      "target": "src/code_review_agent/resources/rules/handlebars_mustache.md",
+      "sha256": "aa7d5a2d053402549ee2700fe26bae876b37937dc99d6c11e434b527c20feaaf"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/haskell.md",
+      "target": "src/code_review_agent/resources/rules/haskell.md",
+      "sha256": "94032848f52f79e2fe42c77ffa189395e62b6df2f1198c85f82e1bb806b4bf2a"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/java.md",
+      "target": "src/code_review_agent/resources/rules/java.md",
+      "sha256": "06668355abc6f5f4f703215870228c1e913e4360bf30ae682bb04d36b57b4837"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/json.md",
+      "target": "src/code_review_agent/resources/rules/json.md",
+      "sha256": "5ec3f0fea279f3b63d417621ece604de89f40a3a5946fdd8e5e07aad8d64d410"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/jsonnet.md",
+      "target": "src/code_review_agent/resources/rules/jsonnet.md",
+      "sha256": "22d24192a4fb87b8a263a2f921bcf4e946145ef7b59d6fb88ec7cdc907fb25c9"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/julia.md",
+      "target": "src/code_review_agent/resources/rules/julia.md",
+      "sha256": "3a55c6e22a2d092b5dcf200ff851e67e58a1d39538801489a2ad7153a6360ebb"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/kotlin.md",
+      "target": "src/code_review_agent/resources/rules/kotlin.md",
+      "sha256": "816c6930855936bf987de87ae6847d954da015ed4af37a8bee2cb9e3128afae1"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/mapper_dao_xml.md",
+      "target": "src/code_review_agent/resources/rules/mapper_dao_xml.md",
+      "sha256": "8ff3a60e38e44986f82cba70cbbe7782ed4ea294486048336a14d173cf92678e"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/matlab.md",
+      "target": "src/code_review_agent/resources/rules/matlab.md",
+      "sha256": "76cde57b83dc943813c521f00d03238e435851b9b66d0a74fe9d93cc2384a4f5"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/nim.md",
+      "target": "src/code_review_agent/resources/rules/nim.md",
+      "sha256": "7b6682f398a22387d1c19e0e727b6fd23769e4aa639e0ef77ef8aba4982b7e73"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/nix.md",
+      "target": "src/code_review_agent/resources/rules/nix.md",
+      "sha256": "49dc36a063cc4b423836b365d176511a3d82df426e3ab1b59ef32ce39f835feb"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/objc.md",
+      "target": "src/code_review_agent/resources/rules/objc.md",
+      "sha256": "1ee6a1730ac0fffefc3ffc9f170c20f1aec54383dada662ffd23cb0e584b8e50"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/package_json.md",
+      "target": "src/code_review_agent/resources/rules/package_json.md",
+      "sha256": "64307261dc703f6d8541ba9b5ddf7ee9be49f51018d7e5df4a5e57bd420a408f"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/php.md",
+      "target": "src/code_review_agent/resources/rules/php.md",
+      "sha256": "1ee3de4d9c2c122f8970e08c05eb9cee8139920cb28eaa75f83d470e771e527a"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/po.md",
+      "target": "src/code_review_agent/resources/rules/po.md",
+      "sha256": "c35c4c6698e68944edd583ae94adb3710b8ae0b3d11edd315ca6d9edfa6e522b"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/pom_xml.md",
+      "target": "src/code_review_agent/resources/rules/pom_xml.md",
+      "sha256": "1ef2b428df0e78a06cb2065f2aac53a6604b2c8ac578d917cc6cceaf4b08907e"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/pot.md",
+      "target": "src/code_review_agent/resources/rules/pot.md",
+      "sha256": "4e365876a314944ca2fdaac6c9d0d91e77b32792f4bce5f9b08575c410b6a980"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/prisma.md",
+      "target": "src/code_review_agent/resources/rules/prisma.md",
+      "sha256": "46443470a166ad8e6c36401a82acb263482204acbe3cfe46733e436e43ec87c4"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/properties.md",
+      "target": "src/code_review_agent/resources/rules/properties.md",
+      "sha256": "d4c304229aec069b009cf3a762c0fcb16d8944c4f059187533a745e36e35fb82"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/protobuf.md",
+      "target": "src/code_review_agent/resources/rules/protobuf.md",
+      "sha256": "1dfcb6d6ec336f815f2c28ff5bfde8fb5563ae54386affdc26d315ce28b05cb7"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/pug.md",
+      "target": "src/code_review_agent/resources/rules/pug.md",
+      "sha256": "1a4e02a7bb73958b828cc1a5eb8f73ec59c82a221b4be5ba206b055537f5d8f3"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/python.md",
+      "target": "src/code_review_agent/resources/rules/python.md",
+      "sha256": "9f449a1a60a1aba04e3a32de7854be0407d7acc4316f0364a124e79fcc7f8595"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/r.md",
+      "target": "src/code_review_agent/resources/rules/r.md",
+      "sha256": "ae45b3705e663329a64a63ec198e792f3c12c6d73a34492d15ad8b42ba8c4e56"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/rust.md",
+      "target": "src/code_review_agent/resources/rules/rust.md",
+      "sha256": "e8f947933540302f0a96d2eced84a28851a10d9bbeaaeffa0677ac11adb4d5ff"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/solidity.md",
+      "target": "src/code_review_agent/resources/rules/solidity.md",
+      "sha256": "85251d1136e6455cdd82b8bffbc7852776bc741e33aca6df8a7da46641891695"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/swift.md",
+      "target": "src/code_review_agent/resources/rules/swift.md",
+      "sha256": "38d69073741b6b355803dfd6631c01d4f4f999ab438667abcf911e591045036b"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/terraform.md",
+      "target": "src/code_review_agent/resources/rules/terraform.md",
+      "sha256": "d2a5877ef8fdfb5cb1883aabf1ad7130894b01996292ae5e096ec1f35f78b92a"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/thrift.md",
+      "target": "src/code_review_agent/resources/rules/thrift.md",
+      "sha256": "0403f77502963820e119a957c2c356dea6553e8bdd6408acbe400ae2bc1e1a71"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/ts_js_tsx_jsx.md",
+      "target": "src/code_review_agent/resources/rules/ts_js_tsx_jsx.md",
+      "sha256": "a365402a1884650cac3309f4c366020777452ef2f5f8d3ea474b9534004c5714"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/verilog.md",
+      "target": "src/code_review_agent/resources/rules/verilog.md",
+      "sha256": "377135189aa398642da704bf5d5e165fe63a2f2a8f8cf9ab98e2fd1eb8a9a5c7"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/vhdl.md",
+      "target": "src/code_review_agent/resources/rules/vhdl.md",
+      "sha256": "56073c350c045fbaad5aba11c7ef8e89480197e389c4bb1c21930704ceb79e15"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/vyper.md",
+      "target": "src/code_review_agent/resources/rules/vyper.md",
+      "sha256": "6da84eeeca3cbaa95d3bb597021580e01e49fbb349610280c7b659e32a9f4274"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/yaml.md",
+      "target": "src/code_review_agent/resources/rules/yaml.md",
+      "sha256": "39cd95b21cf24f214cf1cfb080ae31e6441844496cbf49d573590200980872eb"
+    },
+    {
+      "source": "internal/config/rules/rule_docs/zig.md",
+      "target": "src/code_review_agent/resources/rules/zig.md",
+      "sha256": "6dcb998feec178c3d8bda0d6947dbc34553cb4f435c6eebc02d65aaeef1a9582"
+    },
+    {
+      "source": "internal/config/template/prompts/grouping_task_system.md",
+      "target": "src/code_review_agent/resources/prompts/grouping_task_system.md",
+      "sha256": "08e4b1bf86a2366472f59f1a3ac34de7806d212199e8989a86f568499e6010c7"
+    },
+    {
+      "source": "internal/config/template/prompts/grouping_task_user.md",
+      "target": "src/code_review_agent/resources/prompts/grouping_task_user.md",
+      "sha256": "edceb30e26c3455d41958adac6bb5f554961992b9f6be1b067cbfcc24798bc1e"
+    },
+    {
+      "source": "internal/config/template/prompts/main_task_system.md",
+      "target": "src/code_review_agent/resources/prompts/main_task_system.md",
+      "sha256": "601ac672f52a616b3d5443283602cc74e1e69c75144db92e92c92ae2a6f1ad68"
+    },
+    {
+      "source": "internal/config/template/prompts/main_task_user.md",
+      "target": "src/code_review_agent/resources/prompts/main_task_user.md",
+      "sha256": "1300a7ea07dc8d830604e4bb2caa886326b9c3ffd2de276c62f4a606ba34fb8c"
+    },
+    {
+      "source": "internal/config/template/prompts/memory_compression_task_system.md",
+      "target": "src/code_review_agent/resources/prompts/memory_compression_task_system.md",
+      "sha256": "8af8c89594af3221e49154bb9ca7ee82be3550eec9bb033354e9d084f2c90b5e"
+    },
+    {
+      "source": "internal/config/template/prompts/memory_compression_task_user.md",
+      "target": "src/code_review_agent/resources/prompts/memory_compression_task_user.md",
+      "sha256": "d17923ad1281238a759f39dfcf2951d75b3893a494646b1164f7b903f840f56f"
+    },
+    {
+      "source": "internal/config/template/prompts/plan_task_system.md",
+      "target": "src/code_review_agent/resources/prompts/plan_task_system.md",
+      "sha256": "fb9fdcf6102d9e44f0693b6ceddb0ee4d14bc1dc0d49f33a8e481157b787bc27"
+    },
+    {
+      "source": "internal/config/template/prompts/plan_task_user.md",
+      "target": "src/code_review_agent/resources/prompts/plan_task_user.md",
+      "sha256": "d7697e856a0eb7860f051cb1319bb9b4099666fe8c66e6232368449696132363"
+    },
+    {
+      "source": "internal/config/template/prompts/re_location_task_system.md",
+      "target": "src/code_review_agent/resources/prompts/re_location_task_system.md",
+      "sha256": "4a7956f379ff49cac4251582931e35836516162edacac0ce74e81d9e48fa783f"
+    },
+    {
+      "source": "internal/config/template/prompts/re_location_task_user.md",
+      "target": "src/code_review_agent/resources/prompts/re_location_task_user.md",
+      "sha256": "a931857542a500c733dedd1090528e986c9bf1d4924d762645f79512411d2685"
+    },
+    {
+      "source": "internal/config/template/prompts/review_filter_task_system.md",
+      "target": "src/code_review_agent/resources/prompts/review_filter_task_system.md",
+      "sha256": "f29535a1b57b69d1b29f5ac1841f0afbcbc2a6960ffa4d4b88e23ed5e881a0f8"
+    },
+    {
+      "source": "internal/config/template/prompts/review_filter_task_user.md",
+      "target": "src/code_review_agent/resources/prompts/review_filter_task_user.md",
+      "sha256": "0b51e19529836e62b7abd85d6c3f661a3a1b83cd75038fd54d5e2d5bc9db1f65"
+    },
+    {
+      "source": "internal/config/rules/system_rules.json",
+      "target": "src/code_review_agent/resources/rules/system_rules.json",
+      "sha256": "cec37c4b51e9e061672bb13df3b205cea58cc0389a8c74cde31eb834a9e8b319"
+    },
+    {
+      "source": "internal/config/template/task_template.json",
+      "target": "src/code_review_agent/resources/prompts/task_template.json",
+      "sha256": "3d88cc8e50a4624f1f4d2fd5518898e4eac4e827eb63b16270167b0fbddf6a32"
+    },
+    {
+      "source": "internal/config/template/scan_template.json",
+      "target": "src/code_review_agent/resources/prompts/scan_template.json",
+      "sha256": "f25c7a0703d2bd7874e95a67b91519b1cad39e24d234152d749bac3ff36742ad"
+    },
+    {
+      "source": "internal/config/toolsconfig/tools.json",
+      "target": "src/code_review_agent/resources/tool_schemas/tools.json",
+      "sha256": "5563e606c94ba1ad80d652d52d5cf289959fc3fcbf08aef40d10cbd9a0592023"
+    },
+    {
+      "source": "LICENSE",
+      "target": "THIRD_PARTY_LICENSES/open-code-review-LICENSE",
+      "sha256": "1945665fdb6968a66ea29438ddee0aee23035365c862e5c4a75b62b303340acf"
+    },
+    {
+      "source": "internal/config/allowlist/supported_file_types.json",
+      "target": "src/code_review_agent/resources/filters/supported_file_types.json",
+      "sha256": "18d965814088e86bc3e7781081c16c27f3904eb8cae17abdd856eb9fcc09f536"
+    },
+    {
+      "source": "internal/config/allowlist/default_exclude_patterns.json",
+      "target": "src/code_review_agent/resources/filters/default_exclude_patterns.json",
+      "sha256": "99980ca7073b7a10a99f1a391b6f503c9b0ee34073ed4e0aa437cb8493fee70c"
+    }
+  ],
+  "runtime_dependency": false
+}
