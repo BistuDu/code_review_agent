@@ -25,7 +25,7 @@ from ..runtime.recording import unit_scope
 from ..runtime.stages import StageRunner, parse_json_response
 from .prompts import scan_prompt
 
-SCAN_POLICY = "go-scan-batches-v1"
+SCAN_POLICY = "scan-batches-v1"
 Checkpoint = Callable[[UnitResult], Awaitable[None]]
 
 

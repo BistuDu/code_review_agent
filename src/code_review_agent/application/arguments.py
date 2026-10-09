@@ -15,6 +15,18 @@ def common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--language", choices=("zh", "en"))
     parser.add_argument("--effort", choices=("low", "medium", "high"))
     parser.add_argument("--protocol", choices=("chat_completions",))
+    parser.add_argument(
+        "--timeout",
+        dest="group_timeout_minutes",
+        type=float,
+        help="Per-group minutes multiplied by review rounds; scan uses one round (default: 15, 0: unlimited)",
+    )
+    parser.add_argument(
+        "--review-timeout",
+        dest="review_timeout_seconds",
+        type=float,
+        help="Optional overall review limit in seconds; benchmark defaults to 1800, daily review has no overall limit",
+    )
     parser.add_argument("--background")
     parser.add_argument("--rule-file")
     parser.add_argument("--global-rule-file")
@@ -59,6 +71,8 @@ def overrides(arguments: argparse.Namespace) -> JsonObject:
         "exclude",
         "max_concurrency",
         "max_tool_iterations",
+        "review_timeout_seconds",
+        "group_timeout_minutes",
         "max_file_bytes",
         "tool_result_chars",
         "batch_size",

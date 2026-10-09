@@ -19,9 +19,9 @@ from code_review_agent.tools.registry import ToolRegistry
 
 def test_resources_are_independent_and_preserve_manifest() -> None:
     root = RESOURCE_ROOT.parents[2]
-    manifest = json.loads((RESOURCE_ROOT / "migration_manifest.json").read_text())
+    manifest = json.loads((RESOURCE_ROOT / "resource_manifest.json").read_text())
     for item in manifest["resources"]:
-        file = root / item["target"]
+        file = root / item["path"]
         assert file.is_file()
         assert hashlib.sha256(file.read_bytes()).hexdigest() == item["sha256"]
     configuration = json.loads((RESOURCE_ROOT / "rules/system_rules.json").read_text())

@@ -1,6 +1,6 @@
 # 本项目与 Claude Code 的 AACR 评测
 
-评测整套代码评审流程：本项目调用生产 Python/AgentScope review，Claude 使用原生 Agent 和固定本地任务，统一最终 comments JSON，再由匿名独立 Judge 判分。不运行 Go/AACR 参考项目、不使用 MCP，不再提供 B0/R0/R1/定位模块实验。
+评测整套代码评审流程：本项目调用生产 Python/AgentScope review，Claude 使用原生 Agent 和固定本地任务，统一最终 comments JSON，再由匿名独立 Judge 判分。评测入口直接执行本项目与 Claude Code 两套评审器。
 
 ## 数据集与源码关系
 
@@ -54,7 +54,7 @@ prepare 结束缓存只展开最后一个 TARGET；每个实际任务仍重新�
 .venv/bin/python benchmark.py --config config.local.json --run-id formal-test --stage report --format json
 ```
 
-prepare 读取本地 JSON 并 clone/fetch/checkout 所选仓库源码；review 可补齐缺失的端点，固定 PR 外层默认 1800 秒（`--review-timeout`）。已完成 reviewer 不再调用 Git/模型；失败/中断任务重新执行且追加 attempt，不复用旧对话。实现、规则、模型或任务配置改变需新 run-id。一个 run 同时只能有一个 prepare/review/score 执行者。外置规则正文及引用文件内容参与身份校验，不仅比较规则路径。
+prepare 读取本地 JSON 并 clone/fetch/checkout 所选仓库源码；review 可补齐缺失的端点。每个 PR、每个评审器默认获得外层 1800 秒（`--review-timeout`，配置 `review_timeout_seconds`）；日常 main/session 入口默认不设外层总超时。项目内部按 Go 为每个 Diff 组独立分配 `--timeout` 分钟乘最大轮数，默认 15/30/45 分钟；Scan 每个文件默认 15 分钟。时间从取得并发槽位后开始，Plan、主评审各轮、压缩、定位和 Reflection 共享组截止时间，不按轮重置，组超时不取消其他组。阶段采用组和外层中更早的截止时间；`--timeout 0` 只关闭组限制，评测外层仍生效。源码准备与 Judge 评分另计。单次 API 默认超时 300 秒，工具迭代上限独立生效。超时保留完成文件及提交评论，区分 Group timeout 与 Review timeout，未完成结果不作为完整评分。已完成 reviewer 不再调用 Git/模型；失败/中断任务重新执行且追加 attempt，不复用旧对话。实现、规则、模型或任务配置改变需新 run-id。一个 run 同时只能有一个 prepare/review/score 执行者。外置规则正文及引用文件内容参与身份校验，不仅比较规则路径。
 
 终端 stderr 实时输出 dataset、每 PR 的源码准备、project/claude 开始与结束、Judge 判分和报告路径；stdout 仍只输出最终结果。`--limit 1` 是一个 PR，并非一次模型请求；生产评审会执行分组、Plan、工具循环、多轮和 Reflection，同仓库两种评审器串行执行。首次运行还需 clone，模型与网络耗时不能以单次 API 延迟估计。
 

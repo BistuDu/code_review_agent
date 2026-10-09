@@ -1,4 +1,4 @@
-"""Go 兼容定位顺序；记录匹配依据，不以定位失败删除评论。"""
+"""分层评论定位；记录匹配依据，不以定位失败删除评论。"""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from .file_scan import file_matches
 from .hunk import hunk_matches
 
 Relocator = Callable[[FindingCandidate], Awaitable[str | None]]
-LOCATION_POLICY = "go-compatible-v1"
+LOCATION_POLICY = "comment-location-v1"
 
 
 async def locate_candidate(
@@ -44,7 +44,7 @@ async def locate_candidate(
             if start is not None and end is not None and end >= start
             else None
         )
-        # Go 接受任一正行号；不完整/逆序坐标通过原始候选输出，不伪造有效区间。
+        # 已提供正行号时保留坐标；不完整或逆序坐标不构造有效区间。
         return LocationDecision(
             candidate.candidate_id,
             "provided",

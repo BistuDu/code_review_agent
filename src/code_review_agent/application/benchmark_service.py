@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import math
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from typing import cast
 
 from filelock import FileLock, Timeout
@@ -58,12 +59,14 @@ class BenchmarkService:
         model_factory: ModelFactory = create_model,
         *,
         repository_concurrency: int = 1,
-        timeout: float = 1800,
+        timeout: float | None = None,
         claude_config: ClaudeConfig | None = None,
         progress: Callable[[str], None] | None = None,
     ) -> None:
-        if repository_concurrency < 1 or timeout <= 0:
+        timeout = (settings.review_timeout_seconds or 1800) if timeout is None else timeout
+        if repository_concurrency < 1 or not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("Invalid benchmark concurrency or timeout")
+        settings = replace(settings, review_timeout_seconds=timeout)
         self.paths, self.settings, self.model_factory = paths, settings, model_factory
         self.concurrency, self.timeout = repository_concurrency, timeout
         self.progress = progress
@@ -365,15 +368,13 @@ class BenchmarkService:
                             self._notify(f"[review] {description}：开始 Agent 评审……")
                             try:
                                 if job["reviewer"] == "project":
-                                    output = await asyncio.wait_for(
-                                        run_project(
-                                            self.paths,
-                                            self.settings,
-                                            task,
-                                            str(job["job_id"]),
-                                            self.model_factory,
-                                        ),
-                                        self.timeout,
+                                    output = await run_project(
+                                        self.paths,
+                                        self.settings,
+                                        task,
+                                        str(job["job_id"]),
+                                        self.model_factory,
+                                        deadline=review_started + self.timeout,
                                     )
                                 else:
                                     output = await claude.run(task, str(job["job_id"]), pool, pr)

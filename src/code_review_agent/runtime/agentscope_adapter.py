@@ -40,15 +40,20 @@ async def run_single_model(
     user_prompt: str,
     *,
     tools: tuple[JsonObject, ...],
+    deadline: float | None = None,
+    timeout_error: str = "Review timeout: shared deadline exhausted",
 ) -> AgentRun:
     """单次 AgentScope 模型请求；结果工具只作声明，不启动工具循环。"""
     messages = [Msg(name="system", role="system", content=[TextBlock(text=system_prompt)])]
     messages.append(UserMsg(name="user", content=user_prompt))
     if isinstance(model, TrackedChatModel):
-        model.timeout_deadline = time.monotonic() + 300
+        model.timeout_deadline = deadline
+    timeout = asyncio.timeout_at(deadline)
     try:
-        async with asyncio.timeout(300):
+        async with timeout:
             response = await model(messages=messages, tools=cast(list[dict[str, Any]], list(tools)))
+        if timeout.expired():
+            return AgentRun("", False, {}, (), timeout_error)
         if not isinstance(response, ChatResponse):
             raise ValueError("Single-call stages require a non-streaming model")
         if response.finished_reason == FinishedReason.INTERRUPTED:
@@ -63,6 +68,8 @@ async def run_single_model(
             AssistantMsg(name="reflection", content=[block for block in response.content])
         )
         return AgentRun(text, True, {}, (), tool_calls=cast(tuple[JsonObject, ...], calls))
+    except TimeoutError:
+        return AgentRun("", False, {}, (), timeout_error)
     except Exception as error:
         return AgentRun("", False, {}, (), f"{type(error).__name__}: single model call failed")
 
@@ -102,11 +109,16 @@ async def run_agent(
     stage: str,
     registry: ToolRegistry | None = None,
     max_iterations: int = 100,
-    timeout_seconds: float = 300,
+    timeout_seconds: float | None = None,
+    deadline: float | None = None,
+    timeout_error: str = "Review timeout: shared deadline exhausted",
     tool_result_chars: int = 50000,
     allow_compression: bool = True,
     pinned_context: str = "",
 ) -> AgentRun:
+    if timeout_seconds is not None:
+        local_deadline = time.monotonic() + timeout_seconds
+        deadline = min(deadline, local_deadline) if deadline is not None else local_deadline
     state = AgentState()
     toolkit = Toolkit(
         tools=[RegisteredTool(name, registry) for name in registry.definitions] if registry else []
@@ -126,7 +138,7 @@ async def run_agent(
         )
 
     if isinstance(model, TrackedChatModel):
-        model.timeout_deadline = time.monotonic() + timeout_seconds
+        model.timeout_deadline = deadline
     recording = ToolRecordingMiddleware(
         model.record_sink if isinstance(model, TrackedChatModel) else None,
         stage,
@@ -152,8 +164,9 @@ async def run_agent(
     collector = registry.collector if registry else None
     reasoning_calls = 0
     stream = agent.reply_stream(UserMsg(name="user", content=user_prompt), yield_final_msg=True)
+    timeout = asyncio.timeout_at(deadline)
     try:
-        async with asyncio.timeout(timeout_seconds):
+        async with timeout:
             async for event in stream:
                 if isinstance(event, ModelCallStartEvent):
                     if not (collector and collector.finished):
@@ -175,9 +188,13 @@ async def run_agent(
             if collector:
                 completed = collector.finished and not collector.failed and error is None
     except TimeoutError:
-        error = "Stage timeout"
+        error = timeout_error
     except Exception as failure:
         error = f"{type(failure).__name__}: {failure}"
     finally:
         await stream.aclose()
+    # SDK 可能把取消转换成 ReplyEndEvent，不能把总超时误记为漏调 task_done。
+    if timeout.expired() or (deadline is not None and time.monotonic() >= deadline):
+        completed = False
+        error = timeout_error
     return AgentRun(final_text, completed, {}, (), error)

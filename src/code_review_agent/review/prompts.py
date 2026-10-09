@@ -1,4 +1,4 @@
-"""集中构造冻结版本提示词，原资源只在此作必要适配。"""
+"""集中构造冻结版本、评审规则和阶段任务的提示词。"""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def scan_prompt(task: str, values: dict[str, str]) -> tuple[str, str]:
 
 
 def format_scan_plan(raw: str) -> str:
-    """把 Scan 预规划转换为原版关注点列表，异常格式保留模型原文。"""
+    """把 Scan 预规划转换为关注点列表，异常格式保留模型原文。"""
     text = re.sub(r"\A```[^\n]*\n|\n```\s*\Z", "", raw.strip()).strip()
     if not text:
         return "(no pre-scan plan; review the entire file as usual)"
@@ -104,7 +104,7 @@ def prompt_values(
 
 
 def confirmed_findings_block(confirmed: tuple[FindingCandidate, ...]) -> str:
-    """与原版一致：跨轮只传递紧凑发现摘要，明确要求不要重复。"""
+    """跨轮传递紧凑发现摘要，明确要求不要重复已发现的问题。"""
     if not confirmed:
         return ""
     lines = [

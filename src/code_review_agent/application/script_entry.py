@@ -135,7 +135,6 @@ def benchmark(paths: ProjectPaths) -> int:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--repository-concurrency", type=int, default=1)
-    parser.add_argument("--review-timeout", type=float, default=1800)
     parser.add_argument("--repo-count", type=int, default=10)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--k", type=int, default=1)
@@ -155,7 +154,6 @@ def benchmark(paths: ProjectPaths) -> int:
             settings,
             arguments.run_id,
             repository_concurrency=arguments.repository_concurrency,
-            timeout=arguments.review_timeout,
             claude_config=load_claude_config(paths, settings, arguments.claude_config),
             progress=lambda message: print(message, file=sys.stderr, flush=True),
         )

@@ -54,7 +54,14 @@ def test_candidate_roundtrip_and_stable_identity() -> None:
 
 def test_config_precedence_and_secrets(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config = tmp_path / "config.json"
-    config.write_text(json.dumps({"reviewer": {"model": "json-model", "api_key": "test-secret"}}))
+    config.write_text(
+        json.dumps(
+            {
+                "reviewer": {"model": "json-model", "api_key": "test-secret"},
+                "review_timeout_seconds": 2400,
+            }
+        )
+    )
     monkeypatch.setenv("CODE_REVIEW_REVIEWER_MODEL", "env-model")
     settings = load_settings(
         ProjectPaths(tmp_path), "config.json", {"reviewer": {"model": "arg-model"}}
@@ -64,9 +71,28 @@ def test_config_precedence_and_secrets(tmp_path: Path, monkeypatch: pytest.Monke
     assert "test-secret" not in json.dumps(settings.public_json())
     assert settings.language == "zh"
     assert load_settings(ProjectPaths(tmp_path), "config.json").reviewer.model == "env-model"
+    assert load_settings(ProjectPaths(tmp_path), "config.json").review_timeout_seconds == 2400
+    monkeypatch.setenv("CODE_REVIEW_REVIEW_TIMEOUT_SECONDS", "3600")
+    assert load_settings(ProjectPaths(tmp_path), "config.json").review_timeout_seconds == 3600
+    assert (
+        load_settings(
+            ProjectPaths(tmp_path), "config.json", {"review_timeout_seconds": 1800}
+        ).review_timeout_seconds
+        == 1800
+    )
     with pytest.raises(ValueError, match="Unknown configuration"):
         load_settings(ProjectPaths(tmp_path), overrides={"token_budget": 100})
     with pytest.raises(ValueError, match="integer"):
         load_settings(ProjectPaths(tmp_path), overrides={"max_concurrency": True})
+    for invalid in (-1, float("inf"), float("nan"), True, "1800"):
+        with pytest.raises(ValueError, match="review_timeout_seconds"):
+            load_settings(ProjectPaths(tmp_path), overrides={"review_timeout_seconds": invalid})
+    for invalid in (-1, float("inf"), float("nan"), True, "15"):
+        with pytest.raises(ValueError, match="group_timeout_minutes"):
+            load_settings(ProjectPaths(tmp_path), overrides={"group_timeout_minutes": invalid})
+    unlimited = load_settings(
+        ProjectPaths(tmp_path), overrides={"group_timeout_minutes": 0, "review_timeout_seconds": 0}
+    )
+    assert unlimited.group_timeout_minutes == unlimited.review_timeout_seconds == 0
     with pytest.raises(ValueError, match="chat_completions"):
         load_settings(ProjectPaths(tmp_path), overrides={"protocol": "responses"})

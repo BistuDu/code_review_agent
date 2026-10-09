@@ -21,7 +21,7 @@ class ModelSettings:
     max_output_tokens: int = 16384
     context_tokens: int = 300000
     temperature: float = 0.0
-    timeout_seconds: float = 180.0
+    timeout_seconds: float = 300.0
     retries: int = 2
 
     def validate(self) -> None:
@@ -54,6 +54,8 @@ class Settings:
     effort: Literal["low", "medium", "high"] = "medium"
     max_concurrency: int = 8
     max_tool_iterations: int = 100
+    group_timeout_minutes: float = 15.0
+    review_timeout_seconds: float = 0.0
     max_file_bytes: int = 2097152
     tool_result_chars: int = 50000
     group_min_files: int = 4
@@ -72,6 +74,10 @@ class Settings:
     exclude: tuple[str, ...] = ()
 
     def validate(self) -> None:
+        for name in ("group_timeout_minutes", "review_timeout_seconds"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and non-negative")
         if self.protocol != "chat_completions":
             raise ValueError("Only chat_completions is supported")
         if self.language not in {"zh", "en"} or self.effort not in {"low", "medium", "high"}:
@@ -105,6 +111,10 @@ class Settings:
             model = cast(JsonObject, value[role])
             model.pop("api_key")
         return value
+
+    @property
+    def review_rounds(self) -> int:
+        return {"low": 1, "medium": 2, "high": 3}[self.effort]
 
     @property
     def identity(self) -> str:
@@ -183,6 +193,10 @@ def load_settings(
         item = value[key]
         if type(default) is int and type(item) is not int:
             raise ValueError(f"{key} must be an integer")
+        if type(default) is float and (
+            isinstance(item, bool) or not isinstance(item, (int, float))
+        ):
+            raise ValueError(f"{key} must be a number")
         if isinstance(default, str) and not isinstance(item, str):
             raise ValueError(f"{key} must be a string")
     for key in ("include", "exclude"):

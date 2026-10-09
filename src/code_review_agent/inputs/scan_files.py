@@ -1,4 +1,4 @@
-"""Go Scan Provider 的 Git 枚举和非 Git 根 .gitignore 回退。"""
+"""Git 文件枚举与非 Git 目录的根 .gitignore 筛选。"""
 
 from __future__ import annotations
 

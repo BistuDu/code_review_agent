@@ -15,6 +15,7 @@ from ..contracts import JsonObject, JsonValue, UsageRecord
 from ..inputs.selection import RESOURCE_ROOT
 from ..tools.registry import ToolRegistry
 from .agentscope_adapter import AgentRun, run_agent, run_single_model
+from .deadline import effective_deadline
 from .model_factory import TrackedChatModel, create_model
 from .recording import UNIT_ID
 
@@ -42,6 +43,7 @@ class StageRunner:
     usage: list[UsageRecord] = field(default_factory=list)
     records: list[JsonObject] = field(default_factory=list)
     record_sink: Callable[[JsonObject], None] | None = None
+    deadline: float | None = None
 
     _recording_error: Exception | None = field(default=None, init=False)
 
@@ -72,6 +74,9 @@ class StageRunner:
         single_call: bool = False,
         tools: tuple[JsonObject, ...] = (),
     ) -> AgentRun:
+        budget = effective_deadline(self.deadline)
+        if budget.expired:
+            return AgentRun("", False, {}, (), budget.error)
         if stage.startswith("reflection"):
             settings = self.settings.reflection
         elif stage.startswith("judge"):
@@ -86,7 +91,9 @@ class StageRunner:
         model.unit_id = UNIT_ID.get()
         try:
             if single_call:
-                result = await run_single_model(model, system, user, tools=tools)
+                result = await run_single_model(
+                    model, system, user, tools=tools, deadline=budget.at, timeout_error=budget.error
+                )
             else:
                 result = await run_agent(
                     model,
@@ -96,7 +103,8 @@ class StageRunner:
                     stage="reflection" if stage.startswith("reflection") else stage,
                     registry=registry,
                     max_iterations=self.settings.max_tool_iterations,
-                    timeout_seconds=300,
+                    deadline=budget.at,
+                    timeout_error=budget.error,
                     tool_result_chars=self.settings.tool_result_chars,
                     allow_compression=allow_compression,
                     pinned_context=pinned_context,

@@ -1,4 +1,4 @@
-"""AACR 风格普通仓库缓存：获取版本、checkout 与全使用期锁。"""
+"""评测仓库缓存：获取版本、checkout 与全使用期锁。"""
 
 from __future__ import annotations
 

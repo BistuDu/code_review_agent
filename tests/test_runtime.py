@@ -1,5 +1,7 @@
 import asyncio
 import json
+import time
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -9,7 +11,9 @@ from openai import AsyncOpenAI
 from code_review_agent.config import ModelSettings, Settings
 from code_review_agent.inputs.snapshots import prepare_input
 from code_review_agent.runtime.agentscope_adapter import run_agent
+from code_review_agent.runtime.deadline import TaskDeadline, deadline_scope
 from code_review_agent.runtime.model_factory import create_model
+from code_review_agent.runtime.stages import StageRunner
 from code_review_agent.tools.context import ContextTools
 from code_review_agent.tools.findings import FindingCollector
 from code_review_agent.tools.registry import ToolRegistry
@@ -282,9 +286,112 @@ async def test_stage_timeout_is_not_success() -> None:
     try:
         result = await run_agent(model, "test", "test", stage="review", timeout_seconds=0.01)
         assert not result.completed
+        assert "Review timeout" in result.error
         assert len(usage) == 1 and usage[0].input_tokens is None
     finally:
         await model.client.close()
+
+
+@pytest.mark.asyncio
+async def test_rounds_inherit_one_deadline_instead_of_a_300_second_cap(monkeypatch):
+    from types import SimpleNamespace
+
+    from code_review_agent.runtime.agentscope_adapter import AgentRun
+
+    clock = [1000.0]
+    deadline = 2800.0
+    observed = []
+    monkeypatch.setattr(
+        "code_review_agent.runtime.deadline.time", SimpleNamespace(monotonic=lambda: clock[0])
+    )
+
+    async def run(model, system, user, **kwargs):
+        assert "timeout_seconds" not in kwargs
+        observed.append(kwargs["deadline"])
+        clock[0] += 400  # 每轮超过旧 300 秒，但总时间仍有余量。
+        return AgentRun("done", True, {}, ())
+
+    monkeypatch.setattr("code_review_agent.runtime.stages.run_agent", run)
+    model = ModelSettings(base_url="https://example.invalid/v1", model="test", api_key="test-key")
+    runner = StageRunner(replace(Settings(), reviewer=model), deadline=deadline)
+    for number in range(3):
+        assert (await runner.run(f"review.round{number + 1}", "test", "test")).completed
+    assert observed == [deadline] * 3
+
+
+@pytest.mark.asyncio
+async def test_single_call_uses_remaining_shared_time_and_expired_stages_make_no_request():
+    requests = []
+    created = []
+
+    def factory(settings, stage, usage):
+        model = create_model(settings, stage, usage)
+        original = model.client
+        created.append(stage)
+
+        async def handler(request):
+            await original.close()
+            requests.append(stage)
+            await asyncio.sleep(1 if stage.startswith("reflection") else 0.03)
+            return response({"role": "assistant", "content": "done"})
+
+        model.client = AsyncOpenAI(
+            api_key="test-key",
+            base_url=settings.base_url,
+            max_retries=0,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        )
+        return model
+
+    model = ModelSettings(
+        base_url="https://example.invalid/v1", model="test", api_key="test-key", retries=0
+    )
+    started = time.monotonic()
+    runner = StageRunner(
+        replace(Settings(), reviewer=model, reflection=model),
+        model_factory=factory,
+        deadline=started + 0.4,
+    )
+    assert (await runner.run("review.round1", "test", "test")).completed
+    result = await runner.run("reflection.isolated", "test", "test", single_call=True)
+    assert not result.completed and "Review timeout" in result.error
+    expired = await runner.run("review.round2", "test", "test")
+    assert not expired.completed and "Review timeout" in expired.error
+    assert requests == created == ["review.round1", "reflection.isolated"]
+    assert time.monotonic() - started < 1
+
+
+@pytest.mark.asyncio
+async def test_concurrent_group_deadlines_are_isolated_and_capped_by_outer_deadline(monkeypatch):
+    from code_review_agent.runtime.agentscope_adapter import AgentRun
+
+    model = ModelSettings(base_url="https://example.invalid/v1", model="test", api_key="test-key")
+    overall = time.monotonic() + 1800
+    runner = StageRunner(replace(Settings(), reviewer=model), deadline=overall)
+    observed = {}
+
+    async def fake(model, system, user, **kwargs):
+        await asyncio.sleep(0.01)
+        observed[user] = (kwargs["deadline"], kwargs["timeout_error"])
+        return AgentRun("", True, {}, ())
+
+    monkeypatch.setattr("code_review_agent.runtime.stages.run_agent", fake)
+
+    async def group(name, seconds):
+        budget = TaskDeadline(
+            time.monotonic() + seconds if seconds else None, f"Group {name} timeout"
+        )
+        with deadline_scope(budget):
+            assert (await runner.run("review.round1", "test", name)).completed
+            assert (await runner.run("review.round2", "test", name)).completed
+        return budget
+
+    shorter, longer, unlimited = await asyncio.gather(
+        group("a", 900), group("b", 2700), group("c", 0)
+    )
+    assert observed["a"] == (shorter.at, shorter.error)
+    assert observed["b"] == observed["c"] == (overall, "Review timeout: PR/run deadline exhausted")
+    assert runner.deadline == overall
 
 
 @pytest.mark.asyncio

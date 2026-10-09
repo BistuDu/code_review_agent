@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import replace
 
@@ -24,6 +25,7 @@ from ..location.pipeline import locate_candidate
 from ..location.relocation import relocate
 from ..reflection.reviewer import reflect_group
 from ..runtime.agentscope_adapter import AgentRun
+from ..runtime.deadline import TASK_DEADLINE, TaskDeadline, deadline_scope, effective_deadline
 from ..runtime.recording import unit_scope
 from ..runtime.stages import StageRunner, render_prompt
 from ..tools.context import ContextTools
@@ -51,6 +53,8 @@ class ReviewEngine:
         self.cancelled = False
         self._location_semaphore = asyncio.Semaphore(settings.max_concurrency)
         self._pending_scan_locations: dict[str, FindingCollector] = {}
+        self._unit_deadlines: dict[str, TaskDeadline] = {}
+        self._path_deadlines: dict[str, TaskDeadline] = {}
 
     async def plan(self, unit: ReviewUnit) -> str:
         files = {file.path: file for file in self.input.files}
@@ -88,8 +92,41 @@ class ReviewEngine:
         return result.text
 
     async def review_unit(self, unit: ReviewUnit, *, defer_locations: bool = False) -> UnitResult:
-        with unit_scope(unit.unit_id):
-            return await self._review_unit(unit, defer_locations=defer_locations)
+        # 调度方已取得并发槽位；等待槽位不消耗该组的时间额度。
+        rounds = 1 if self.input.mode == InputMode.SCAN else self.settings.review_rounds
+        seconds = self.settings.group_timeout_minutes * 60 * rounds
+        label = "Scan file" if self.input.mode == InputMode.SCAN else "Group"
+        budget = TaskDeadline(
+            time.monotonic() + seconds if seconds > 0 else None,
+            f"{label} timeout: {seconds:g}s deadline exhausted for {', '.join(unit.paths)}",
+        )
+        self._unit_deadlines[unit.unit_id] = budget
+        self._path_deadlines.update(dict.fromkeys(unit.paths, budget))
+        with unit_scope(unit.unit_id), deadline_scope(budget):
+            timeout = asyncio.timeout_at(budget.at)
+            try:
+                async with timeout:
+                    output = await self._review_unit(unit, defer_locations=defer_locations)
+            except TimeoutError:
+                output = UnitResult(unit, dict.fromkeys(unit.paths, "failed"))
+            if timeout.expired() or budget.expired:
+                output.coverage = dict.fromkeys(
+                    unit.paths, "partial" if output.candidates else "failed"
+                )
+                if budget.error not in output.warnings:
+                    output.warnings.append(budget.error)
+            return output
+
+    def _group_timed_out(self) -> bool:
+        budget = TASK_DEADLINE.get()
+        return (
+            budget is not None
+            and budget.expired
+            and (self.runner.deadline is None or time.monotonic() < self.runner.deadline)
+        )
+
+    def _deadline_for_path(self, path: str) -> TaskDeadline | None:
+        return self._path_deadlines.get(path)
 
     async def _review_unit(self, unit: ReviewUnit, *, defer_locations: bool = False) -> UnitResult:
         output = UnitResult(unit, dict.fromkeys(unit.paths, "pending"))
@@ -98,11 +135,7 @@ class ReviewEngine:
         except Exception as error:
             plan = ""
             output.warnings.append(f"Planning fallback: {type(error).__name__}")
-        rounds = (
-            1
-            if self.input.mode == InputMode.SCAN
-            else {"low": 1, "medium": 2, "high": 3}[self.settings.effort]
-        )
+        rounds = 1 if self.input.mode == InputMode.SCAN else self.settings.review_rounds
         confirmed: list[FindingCandidate] = []
         round_filter = self.input.mode != InputMode.SCAN
         for number in range(rounds):
@@ -152,9 +185,19 @@ class ReviewEngine:
                 else:
                     await collector.wait_locations()
             except asyncio.CancelledError:
-                self.cancelled = True
+                group_expired = self._group_timed_out()
+                if not group_expired:
+                    self.cancelled = True
                 await collector.wait_locations(cancel=True)
-                result = AgentRun("", False, {}, (), "Review cancelled")
+                result = AgentRun(
+                    "",
+                    False,
+                    {},
+                    (),
+                    effective_deadline(self.runner.deadline).error
+                    if group_expired
+                    else "Review cancelled",
+                )
             except Exception:
                 await collector.wait_locations(cancel=True)
                 raise
@@ -182,9 +225,15 @@ class ReviewEngine:
                         else []
                     )
                 except asyncio.CancelledError:
-                    self.cancelled = True
+                    group_expired = self._group_timed_out()
+                    if not group_expired:
+                        self.cancelled = True
                     output.coverage = dict.fromkeys(unit.paths, "partial")
-                    output.warnings.append("Reflection cancelled; submitted candidates retained")
+                    output.warnings.append(
+                        effective_deadline(self.runner.deadline).error
+                        if group_expired
+                        else "Reflection cancelled; submitted candidates retained"
+                    )
                     return output
                 output.reflections.extend(reflections)
                 for candidate, reflection in zip(effective, reflections, strict=True):
@@ -318,7 +367,8 @@ class ReviewEngine:
             if candidate.candidate_id not in location_cache:
                 decision = (completed_locations or {}).get(candidate.candidate_id)
                 if decision is None:
-                    decision = await self.locate(candidate)
+                    with deadline_scope(self._deadline_for_path(candidate.path)):
+                        decision = await self.locate(candidate)
                 result.locations.append(decision)
                 location_cache[candidate.candidate_id] = decision
             reflection = (completed_reflections or {}).get(candidate.candidate_id)
@@ -338,9 +388,10 @@ class ReviewEngine:
                 and item.candidate_id not in result.suppressed
             )
             if pending:
-                decisions = await reflect_group(
-                    pending, self.input, self.runner, target_paths=unit.paths
-                )
+                with deadline_scope(self._unit_deadlines.get(unit.unit_id)):
+                    decisions = await reflect_group(
+                        pending, self.input, self.runner, target_paths=unit.paths
+                    )
                 result.reflections.extend(decisions)
                 reflection_cache.update({item.candidate_id: item for item in decisions})
         result.project_summary = self.summary
@@ -357,14 +408,15 @@ class ReviewEngine:
         async def relocalize(item: FindingCandidate) -> str | None:
             return await relocate(item, self.input, self.runner)
 
-        async with self._location_semaphore:
-            return await locate_candidate(
-                candidate,
-                self.input,
-                level=3,
-                cross_file=self.input.mode != InputMode.SCAN,
-                relocator=relocalize,
-            )
+        with deadline_scope(TASK_DEADLINE.get() or self._deadline_for_path(candidate.path)):
+            async with self._location_semaphore:
+                return await locate_candidate(
+                    candidate,
+                    self.input,
+                    level=3,
+                    cross_file=self.input.mode != InputMode.SCAN,
+                    relocator=relocalize,
+                )
 
     @staticmethod
     def effective_candidate(

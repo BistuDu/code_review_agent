@@ -49,6 +49,7 @@ async def review(
     resume: str | None = None,
     range_strategy: str | None = None,
     model_factory: ModelFactory = create_model,
+    deadline: float | None = None,
 ) -> ReviewResult:
     preparation_started = time.monotonic()
     parent = load_session(paths, resume) if resume else None
@@ -183,15 +184,32 @@ async def review(
         result.status = RunStatus.RUNNING
         result.preparation_seconds = time.monotonic() - preparation_started
         review_started = time.monotonic()
+        overall_deadline = (
+            review_started + settings.review_timeout_seconds
+            if settings.review_timeout_seconds > 0
+            else None
+        )
+        runner.deadline = (
+            min(deadline, overall_deadline)
+            if deadline is not None and overall_deadline is not None
+            else deadline
+            if deadline is not None
+            else overall_deadline
+        )
+        timeout = asyncio.timeout_at(runner.deadline)
         try:
-            await engine.run(
-                result,
-                completed=cached,
-                checkpoint=checkpoint_unit,
-                batch_checkpoint=checkpoint_batch,
-            )
+            async with timeout:
+                await engine.run(
+                    result,
+                    completed=cached,
+                    checkpoint=checkpoint_unit,
+                    batch_checkpoint=checkpoint_batch,
+                )
         except JournalError:
             raise
+        except TimeoutError:
+            # 下面统一处理超时，保留已提交候选和完成文件的检查点。
+            pass
         except asyncio.CancelledError:
             result.status = (
                 RunStatus.PARTIAL if saved_paths or result.candidates else RunStatus.FAILED
@@ -204,6 +222,19 @@ async def review(
             result.warnings.append(f"{type(error).__name__}: {error}")
         finally:
             result.review_seconds = time.monotonic() - review_started
+        if timeout.expired() or (
+            runner.deadline is not None and time.monotonic() >= runner.deadline
+        ):
+            result.status = (
+                RunStatus.PARTIAL
+                if result.candidates
+                or any(state == "reviewed" for state in result.coverage.values())
+                else RunStatus.FAILED
+            )
+            result.warnings.append(
+                f"Review timeout: shared {settings.review_timeout_seconds:g}s deadline exhausted; "
+                "completed files and submitted candidates retained"
+            )
         runner.check_recording()
         journal.check()
         # 已知但失败的文件也保存诊断；未派发文件保持 pending，不冒充完成。

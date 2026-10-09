@@ -1,4 +1,4 @@
-"""与 Go filterTools 一致的声明工具，analysis 在 comment_ids 之前。"""
+"""批量复核的结果工具声明，analysis 在 comment_ids 之前。"""
 
 from ..contracts import JsonObject
 

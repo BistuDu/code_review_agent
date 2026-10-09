@@ -166,7 +166,8 @@ async def test_repetitions_repo_serial_parallel_and_failed_retry(service, monkey
             return {"status": "failed", "comments": [], "usage": [], "error": "simulated failure"}
         return {"status": "completed", "comments": [], "usage": [], "review_seconds": 0.03}
 
-    async def project(paths, settings, task, job_id, factory):
+    async def project(paths, settings, task, job_id, factory, *, deadline=None):
+        assert deadline is not None
         return await run(task, job_id, "project")
 
     async def claude(self, task, job_id, pool, pr):

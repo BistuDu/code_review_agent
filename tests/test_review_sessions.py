@@ -1,3 +1,4 @@
+import asyncio
 import json
 from dataclasses import replace
 from pathlib import Path
@@ -194,6 +195,43 @@ async def test_filtered_candidates_stay_in_diagnostics_and_failure_keeps_earlier
     assert failed.coverage["a.py"] == "partial"
     value = output_json(failed, configured().public_json(), ("secret-key",))
     assert "secret-key" not in json.dumps(value)
+
+
+@pytest.mark.asyncio
+async def test_total_timeout_saves_partial_comments_and_session_end(tmp_path: Path):
+    paths = ProjectPaths(tmp_path)
+    repo = tmp_path / "source"
+    repo.mkdir()
+    (repo / "a.py").write_text("return 1 / x\n")
+    requests = []
+    factory = scripted_factory(requests)
+
+    def slow_factory(settings, stage, usage):
+        model = factory(settings, stage, usage)
+        transport = model.client._client._transport
+        original_handler = transport.handler
+        count = 0
+
+        async def handler(request):
+            nonlocal count
+            count += 1
+            if stage.startswith("review") and count > 1:
+                await asyncio.sleep(1)
+            return await original_handler(request)
+
+        transport.handler = handler
+        return model
+
+    settings = replace(configured(), review_timeout_seconds=0.3, scan_summary=False)
+    result = await review(paths, settings, repo, mode="scan", model_factory=slow_factory)
+    assert result.status == RunStatus.PARTIAL
+    assert result.coverage == {"a.py": "partial"}
+    assert len(result.candidates) == 1
+    assert any("Review timeout" in warning for warning in result.warnings)
+    view = load_session(paths, result.manifest.session_id)
+    assert view.end is not None and not view.reusable
+    assert view.result().status == RunStatus.PARTIAL
+    assert len(view.result().candidates) == 1
 
 
 def test_atomic_store_tail_and_secret_redaction(tmp_path: Path):

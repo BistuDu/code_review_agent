@@ -265,7 +265,7 @@ def test_bundled_dataset_works_in_relocated_project(tmp_path: Path):
         original / "src", relocated / "src", ignore=shutil.ignore_patterns("__pycache__")
     )
     shutil.copytree(original / "dataset", relocated / "dataset")
-    # 子进程不使用 editable import 或原项目路径，依赖可由已安装 Python 提供。
+    # 子进程不使用 editable import 或外部源码路径，依赖可由已安装 Python 提供。
     script = """
 import sys, json
 from pathlib import Path

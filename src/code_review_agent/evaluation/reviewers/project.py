@@ -19,6 +19,8 @@ async def run_project(
     task: ReviewTask,
     job_id: str,
     factory: ModelFactory = create_model,
+    *,
+    deadline: float | None = None,
 ) -> JsonObject:
     result = await review(
         paths,
@@ -28,6 +30,7 @@ async def run_project(
         to_ref=task.target,
         range_strategy="direct",
         model_factory=factory,
+        deadline=deadline,
     )
     value = output_json(
         result,

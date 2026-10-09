@@ -22,7 +22,7 @@ Each part carries exactly one piece of information:
 - the `Summary:` line — the overall change summary
 - the `[...]` tag — the severity of that issue
 - the text after the severity tag — the issue description
-- each `→` line — one piece of tool guidance: the tool name, then its invocation arguments, then the reason after the em dash (e.g. `→ file_read internal/agent/agent.go — confirm whether the key passed to AwaitKey matches the one used at submission`)
+- each `→` line — one piece of tool guidance: the tool name, then its invocation arguments, then the reason after the em dash (e.g. `→ file_read src/tasks/worker.py — confirm whether the completion key matches the one used at submission`)
 
 ## Analysis Rules
 1. **Scope**: Only analyze newly added and modified code; ignore deleted code

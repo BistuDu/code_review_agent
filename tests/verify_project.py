@@ -124,7 +124,7 @@ def main() -> None:
         "configured_model_roles": configured,
         "writable_runtime_root": str(PROJECT),
         "runtime_directories": [".cache", ".state", "reports"],
-        "reference_runtime_dependency": False,
+        "self_contained_runtime": True,
         "evaluation_reviewers": ["production project review", "native Claude Code"],
         "evaluation_checks": [
             "direct SOURCE/TARGET",
@@ -135,7 +135,7 @@ def main() -> None:
         "resources_digest": stable_digest(
             json.loads(
                 paths.writable(
-                    "src/code_review_agent/resources/migration_manifest.json"
+                    "src/code_review_agent/resources/resource_manifest.json"
                 ).read_text()
             )
         ),

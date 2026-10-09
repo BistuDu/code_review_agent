@@ -23,7 +23,7 @@
 | .cache/benchmark-repositories/ | Git 仓库、源码、归属/锁/使用权记录 | 评测读取真实代码，复用下载；评审过程中不手动切换或删除 |
 | .cache/claude-review/ | 本次 CLI 隔离配置、工具 hook、累计计数 | 保证 Claude 按同规则、受限工具执行 |
 | .cache/pip、ruff、mypy、pytest、pycache 等 | 依赖下载、静态检查和 Python 缓存 | 开发工具加速，不是评审结果 |
-| .cache/test-tmp、tmp、各类 probe/smoke/alignment/verification 目录 | 临时测试仓库、兼容性与对齐探测 | 开发验证，不是正式评测样本 |
+| .cache/test-tmp、tmp、各类开发验证目录 | 临时测试仓库与功能探测 | 开发验证，不是正式评测样本 |
 | .state/sessions/SESSION_ID.jsonl | 单次项目评审的交互、模型用量、文件检查点与结果 | 查看执行和恢复已完成文件；不恢复旧对话继续思考 |
 | .state/benchmarks/RUN_ID/ | 某次评测的数据身份、任务、输出及评分 | 按 run-id 分开，支持复用完成任务和重新评分 |
 | reports/benchmarks/RUN_ID/ | 可阅读的 Markdown 评测报告 | 用户查看质量指标、时间与用量 |

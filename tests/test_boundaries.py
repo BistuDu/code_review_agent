@@ -47,11 +47,10 @@ def test_managed_repository_ownership_and_symlink_boundary(tmp_path: Path):
         pool.prepare(replace(pr, repo="org/escape"))
 
 
-def test_production_imports_stay_independent_of_evaluation_and_reference_projects():
+def test_production_imports_stay_independent_of_evaluation():
     root = project_root() / "src/code_review_agent"
     for file in root.rglob("*.py"):
         text = file.read_text()
-        assert "open-code-review-main" not in text
         tree = ast.parse(text)
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):

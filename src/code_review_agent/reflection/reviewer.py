@@ -11,7 +11,7 @@ from ..runtime.agentscope_adapter import AgentRun
 from ..runtime.stages import StageRunner, parse_json_response
 from .tools import FILTER_TOOLS
 
-REFLECTION_POLICY = "go-group-diff-v1"
+REFLECTION_POLICY = "group-diff-v1"
 
 
 def comment_indices(ids: object, total: int) -> set[int] | None:
@@ -66,7 +66,7 @@ async def reflect_group(
     *,
     target_paths: tuple[str, ...],
 ) -> list[ReflectionDecision]:
-    # Go 按组内当前路径收集；跨文件重新归属到组外的评论不交给本组复核。
+    # 只复核当前组内评论，跨文件重新归属到组外的评论由对应组处理。
     selected = tuple(item for path in target_paths for item in candidates if item.path == path)
     decisions = {
         item.candidate_id: ReflectionDecision(item.candidate_id, "keep", "Refiled outside group")

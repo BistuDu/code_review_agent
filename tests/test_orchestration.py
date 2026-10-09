@@ -1,4 +1,5 @@
 import asyncio
+import time
 from dataclasses import replace
 from pathlib import Path
 
@@ -20,7 +21,106 @@ from code_review_agent.project_paths import ProjectPaths
 from code_review_agent.review.engine import ReviewEngine
 from code_review_agent.review.rules import RuleResolver
 from code_review_agent.runtime.agentscope_adapter import AgentRun
+from code_review_agent.runtime.deadline import TASK_DEADLINE
 from code_review_agent.runtime.stages import StageRunner
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("effort", "scan", "minutes", "expected_seconds"),
+    [
+        ("low", False, 15, 900),
+        ("medium", False, 15, 1800),
+        ("high", False, 15, 2700),
+        ("high", True, 15, 900),
+        ("high", False, 0, None),
+    ],
+)
+async def test_go_group_time_allowance_and_scan_single_round(
+    tmp_path, effort, scan, minutes, expected_seconds
+):
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "a.py").write_text("value = 1\n")
+    settings = replace(Settings(), effort=effort, group_timeout_minutes=minutes)
+    frozen = prepare_input(source, settings, mode="scan")
+    if not scan:
+        frozen = replace(frozen, mode=InputMode.RANGE)
+    runner = StageRunner(settings)
+    engine = ReviewEngine(
+        frozen, settings, RuleResolver(ProjectPaths(tmp_path), frozen, settings), runner
+    )
+
+    async def fake_unit(unit, **kwargs):
+        from code_review_agent.contracts import UnitResult
+
+        budget = TASK_DEADLINE.get()
+        assert budget is not None
+        if expected_seconds is None:
+            assert budget.at is None
+        else:
+            assert budget.at - time.monotonic() == pytest.approx(expected_seconds, abs=0.1)
+        return UnitResult(unit, dict.fromkeys(unit.paths, "reviewed"))
+
+    engine._review_unit = fake_unit
+    await engine.review_unit(ReviewUnit("a", ("a.py",)))
+    assert TASK_DEADLINE.get() is None
+    assert runner.deadline is None  # 组计时不能写入并发 Agent 共用的字段。
+
+
+@pytest.mark.asyncio
+async def test_one_group_timeout_preserves_comments_and_next_group_gets_full_time(tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+    for name in ("a.py", "b.py"):
+        (source / name).write_text("value = 1\n")
+    settings = replace(Settings(), effort="low", max_concurrency=1, group_timeout_minutes=0.002)
+    frozen = prepare_input(source, settings, mode="scan")
+    frozen = replace(frozen, mode=InputMode.RANGE)
+    runner = StageRunner(settings)
+    budgets = {}
+
+    async def fake_run(stage, system, user, **kwargs):
+        registry = kwargs["registry"]
+        path = next(iter(registry.collector.target_paths))
+        budget = TASK_DEADLINE.get()
+        budgets[path] = budget.at
+        assert budget.at - time.monotonic() > 0.1
+        if path == "a.py":
+            registry.invoke(
+                "code_comment",
+                {
+                    "comments": [
+                        {
+                            "path": path,
+                            "content": "issue",
+                            "existing_code": "value = 1",
+                            "category": "bug",
+                            "severity": "high",
+                        }
+                    ]
+                },
+            )
+            await asyncio.sleep(1)
+        else:
+            await asyncio.sleep(0.07)
+            registry.invoke("task_done", {"state": "DONE", "reviewed_paths": [path]})
+        return AgentRun("", True, {}, ())
+
+    runner.run = fake_run
+    engine = ReviewEngine(
+        frozen, settings, RuleResolver(ProjectPaths(tmp_path), frozen, settings), runner
+    )
+    result = ReviewResult(
+        RunStatus.PENDING,
+        RunManifest("test", "input", "config", "rules", frozen.mode, frozen.repo, None, None),
+    )
+    await engine.run(result, planned=[ReviewUnit("a", ("a.py",)), ReviewUnit("b", ("b.py",))])
+    assert result.coverage == {"a.py": "partial", "b.py": "reviewed"}
+    assert len(result.candidates) == 1 and not engine.cancelled
+    assert result.status == RunStatus.PARTIAL
+    assert budgets["b.py"] - budgets["a.py"] >= 0.1
+    assert any("Group timeout" in warning for warning in result.warnings)
 
 
 @pytest.mark.asyncio
